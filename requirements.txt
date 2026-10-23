@@ -1,7 +1,9 @@
 streamlit
 pandas
 openpyxl
+pypdf
 google-genai
 qiskit
+qiskit-aer
 qiskit-algorithms
 qiskit-optimization
