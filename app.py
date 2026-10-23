@@ -10,7 +10,7 @@ from qiskit_optimization.converters import QuadraticProgramToQubo
 from qiskit_optimization.algorithms import MinimumEigenOptimizer
 from qiskit_algorithms import NumPyMinimumEigensolver
 
-st.set_page_layout(page_title="NODUX Quantum Decision Engine", layout="wide")
+st.set_page_config(page_title="NODUX Quantum Decision Engine", layout="wide")
 
 # Estilos visuales limpios
 st.markdown("""
