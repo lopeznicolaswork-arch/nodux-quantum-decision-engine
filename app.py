@@ -10,9 +10,10 @@ from qiskit_optimization.converters import QuadraticProgramToQubo
 from qiskit_optimization.algorithms import MinimumEigenOptimizer
 from qiskit_algorithms import NumPyMinimumEigensolver
 
+# Configuración de página
 st.set_page_config(page_title="NODUX Quantum Decision Engine", layout="wide")
 
-# Estilos visuales limpios
+# Estilos visuales
 st.markdown("""
     <style>
     .main-title { font-size: 28px; font-weight: 800; color: #1E293B; }
@@ -32,17 +33,48 @@ with st.sidebar:
     st.caption("Obtén tu clave gratuita en [aistudio.google.com](https://aistudio.google.com/)")
     
     st.divider()
-    st.markdown("**Arquitectura:**")
-    st.markdown("• **Parser:** gemini-1.5-flash")
-    st.markdown("• **Solver:** Qiskit Optimization (QUBO)")
-    st.markdown("• **Auditor:** Gemini Executive Mode")
+    st.markdown("**Arquitectura del Sistema:**")
+    st.markdown("• **Parser IA:** Gemini Multi-Model Fallback")
+    st.markdown("• **Solver Cuántico:** Qiskit Optimization (QUBO)")
+    st.markdown("• **Auditor C-Level:** Gemini Executive Mode")
 
 if not gemini_key:
     st.info("👋 Por favor, ingresa tu API Key de Gemini en la barra lateral izquierda para activar la plataforma.")
     st.stop()
 
-# Inicializar cliente de Google AI Studio
+# Inicializar cliente de Google GenAI
 client = genai.Client(api_key=gemini_key)
+
+# -----------------------------------------------------------------------------
+# FUNCIÓN DE LLAMADA CON AUTO-FALLBACK ANTIDISRUPCIÓN
+# -----------------------------------------------------------------------------
+def ejecutar_llamada_gemini(client, prompt, es_json=False):
+    # Lista de modelos en orden de prioridad según la versión activa de tu API Key
+    modelos_a_probar = [
+        "gemini-2.0-flash",
+        "gemini-flash-latest",
+        "gemini-2.0-flash-exp",
+        "gemini-1.5-flash"
+    ]
+    ultimo_error = None
+    
+    config = types.GenerateContentConfig(
+        response_mime_type="application/json" if es_json else None
+    )
+
+    for modelo in modelos_a_probar:
+        try:
+            respuesta = client.models.generate_content(
+                model=modelo,
+                contents=prompt,
+                config=config
+            )
+            return respuesta.text, modelo
+        except Exception as e:
+            ultimo_error = e
+            continue
+            
+    raise ultimo_error
 
 # -----------------------------------------------------------------------------
 # 2. INGESTA DE DATOS (EXCEL, CSV O TEXTO)
@@ -85,7 +117,7 @@ if st.button("🚀 Procesar Datos y Resolver con Motor Cuántico", type="primary
         st.error("No hay datos de entrada para procesar.")
         st.stop()
 
-    # FASE A: PARSER CON GEMINI
+    # FASE A: PARSER CON GEMINI (CON AUTO-FALLBACK)
     with st.spinner("🤖 Fase 1/3: La IA está analizando el texto y estructurando las variables..."):
         prompt_parser = f"""
         Eres un ingeniero de datos especializado en optimización matemática.
@@ -105,12 +137,8 @@ if st.button("🚀 Procesar Datos y Resolver con Motor Cuántico", type="primary
         }}
         """
         try:
-            resp_parser = client.models.generate_content(
-                model='gemini-1.5-flash',
-                contents=prompt_parser,
-                config=types.GenerateContentConfig(response_mime_type="application/json")
-            )
-            parsed_json = json.loads(resp_parser.text)
+            texto_json, modelo_exitoso = ejecutar_llamada_gemini(client, prompt_parser, es_json=True)
+            parsed_json = json.loads(texto_json)
             presupuesto_limite = float(parsed_json["presupuesto_maximo"])
             items = parsed_json["items"]
             n = len(items)
@@ -118,7 +146,7 @@ if st.button("🚀 Procesar Datos y Resolver con Motor Cuántico", type="primary
             st.error(f"Error extrayendo datos con la IA: {e}")
             st.stop()
 
-    st.success(f"✓ Estructuración exitosa: {n} variables detectadas. Presupuesto límite: S/ {presupuesto_limite:,.2f}")
+    st.success(f"✓ Datos estructurados exitosamente con {modelo_exitoso} | {n} variables detectadas | Presupuesto: S/ {presupuesto_limite:,.2f}")
     
     # Mostrar tabla limpia
     df_items = pd.DataFrame(items)
@@ -182,10 +210,7 @@ if st.button("🚀 Procesar Datos y Resolver con Motor Cuántico", type="primary
         3. Recomendaciones Operativas para la Gerencia.
         Usa Markdown limpio y formal con negritas y tablas.
         """
-        resp_informe = client.models.generate_content(
-            model='gemini-1.5-flash',
-            contents=prompt_informe
-        )
+        texto_reporte, _ = ejecutar_llamada_gemini(client, prompt_informe, es_json=False)
 
     st.subheader("3. Dictamen Ejecutivo de Directorio (DOC-03)")
-    st.markdown(resp_informe.text)
+    st.markdown(texto_reporte)
