@@ -33,7 +33,7 @@ with st.sidebar:
     
     st.divider()
     st.markdown("**Arquitectura:**")
-    st.markdown("• **Parser:** Gemini 2.5 Flash")
+    st.markdown("• **Parser:** gemini-1.5-flash")
     st.markdown("• **Solver:** Qiskit Optimization (QUBO)")
     st.markdown("• **Auditor:** Gemini Executive Mode")
 
@@ -106,7 +106,7 @@ if st.button("🚀 Procesar Datos y Resolver con Motor Cuántico", type="primary
         """
         try:
             resp_parser = client.models.generate_content(
-                model='gemini-2.5-flash',
+                model='gemini-1.5-flash',
                 contents=prompt_parser,
                 config=types.GenerateContentConfig(response_mime_type="application/json")
             )
@@ -183,7 +183,7 @@ if st.button("🚀 Procesar Datos y Resolver con Motor Cuántico", type="primary
         Usa Markdown limpio y formal con negritas y tablas.
         """
         resp_informe = client.models.generate_content(
-            model='gemini-2.5-flash',
+            model='gemini-1.5-flash',
             contents=prompt_informe
         )
 
